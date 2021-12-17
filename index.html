@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>toDoList</title>
+</head>
+<style type="text/css">
+	*{
+		margin:0;
+		padding:0;
+	}
+	body{
+	     
+	}
+	button
+	{
+		
+		border: none;
+		outline: none;
+		border-radius: 6px;
+		transition: 0.05s all linear;
+	}
+	button:hover
+	{
+		/*border:2px solid #c9486f;*/
+		cursor: pointer;
+	}
+
+	  .small-container{
+	  	background:url("pic.jpg");
+
+	     background-size: 100% 100%;	
+     max-width: 90%;
+     min-height: 72vh;
+     margin:30px auto;
+     /*background:white;*/
+     padding:30px 30px;
+     box-shadow: 0px 0px 8px 2px black;
+     /*box-shadow: 6px 0px 10px 5px #11718e;*/
+ }
+	ul{list-style: none;}
+ li{
+     position: relative;
+     background: linear-gradient(to bottom,#c9486f 40%,white 40%);
+     /*box-shadow: 0px 0px 10px 10px black; */
+      box-shadow: 0px 3px 15px 0px grey;
+     color:white;
+     padding: 20px 30px;
+     margin-bottom: 40px;
+     transition: 0.5s;
+     line-height: 3.7vh;
+     text-align: center;
+     font-size: 1.1rem;
+     letter-spacing: 1px;
+     border-radius: 5px;
+     width: 60%;
+     margin-left: 17%;
+ }
+ li h3
+ {
+ 	margin-bottom: -20px;
+ 	font-size:1.6rem; 
+ }
+ /*li:hover{
+     box-shadow: 0px 20px 10px 10px whitesmoke;
+ }*/
+ button
+ {
+ 	background-color: #c9486f;
+ 	color: white;
+ }
+ button:hover
+ {
+ 	font-weight: bolder;
+ 	border:2px solid white;
+ }
+	li button,#edit,button
+	{
+		margin-left: 16px;
+		margin-top: 30px;
+		width: 70px;
+		height: 40px;
+		outline: none;
+		cursor: pointer;
+	}
+	#add,#edit
+	{
+		margin-bottom: 20px;
+		width: 80px;
+	}
+	
+	form{
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+	}
+	input
+	{
+		width: 400px;
+		height: 45px;
+	    border:none;
+		margin-top: 20px;
+		padding-left: 4px;
+		box-shadow:0px 0px 10px 0px grey;
+		outline: none;
+	}
+	::placeholder{padding-left: 4px;}
+	.clear-btn
+	{
+		width: 400px;
+		height: 45px;
+		margin:20px 35%;
+	
+		/*background-color: blue;*/
+		/*color: white;*/
+		outline: none;
+		cursor: pointer;
+	}
+	.clear-btn:hover
+	{
+		border:none;
+	}
+	h1,h2{
+		/*margin-left: 20px;*/
+		text-align: center;
+		margin: 25px auto;
+	}
+	ul
+	{
+		margin-top: 20px;
+	}
+</style>
+<body>
+<div class="small-container">
+<h1 style="font-size: 3rem;">Schedule Meetings & Notifier App</h1>
+
+<form>
+ <input id="item" type="text" placeholder="Add New person/company">
+ <input id="time" type="time" placeholder="Add Time of meeting">
+ <input id="date" type="date" placeholder="Add Date of meeting"><br/>
+ <div id="btn-group">
+ <button id="add">Add Item</button>
+ <button type="button" onclick="handleUpdate(event);" id="edit">Edit</button>
+</div>
+</form>
+
+
+<ul></ul>
+
+<button class="clear-btn">Clear All</button>
+<audio src="alarm_sound.mp3" autoplay="true"></audio>
+</div>
+<script type="text/javascript">
+const form=document.querySelector('form');
+const ul=document.querySelector('ul');
+const button5=document.querySelector('.clear-btn');
+const name=document.getElementById('item');
+const time=document.getElementById('time');
+const date=document.getElementById('date');
+name.addEventListener("click",function(){console.log(name)});
+var audio=document.querySelector('audio');
+let event = new MouseEvent('click');
+name.dispatchEvent(event);
+var setIntervalId="";
+console.log(audio);
+let indexOfValueToBeChanged = -1;
+
+let itemsArray=localStorage.getItem('items') ? JSON.parse(localStorage.getItem('items')) : [];
+
+localStorage.setItem('items',JSON.stringify(itemsArray));
+let data=JSON.parse(localStorage.getItem('items'));
+
+
+const liMaker = (text,index) => {
+	const li=document.createElement('li');
+
+	var name=text.name;
+	var time=text.time;
+	var date=text.date;
+	var hoursAmPm=time.substring(0,2);
+	var minAmPm=time.substring(3,5);
+
+	if(hoursAmPm>12)
+	{
+		hoursAmPm=hoursAmPm-12;
+		var timeAmPm=hoursAmPm+":"+minAmPm+"PM";
+	}
+	else
+	{
+		var timeAmPm=hoursAmPm+":"+minAmPm+"AM";
+	}
+		li.innerHTML= `<h3 style="letter-spacing:1px;word-spacing:2px;">MEETINGS SCHEDULE</h3> <span style="position:absolute;left:60px;">AT <strong style="font-size:1.3rem;"> ${timeAmPm}</strong></span> <span style="position:absolute;right:60px;"><strong style="font-size:1.3rem;"> ${date}</strong></span> <br/><br/><br/><span style="color:#c9486f;">Your Meeting Is With <strong style="font-size:1.3rem;">'${name}'</strong></span><br>`;
+	
+	
+	ul.appendChild(li);
+	
+	li.setAttribute("data-index",index);
+	const button1=document.createElement('button');
+	button1.textContent="Update";
+	button1.onclick= function(){
+		setValueToInput(name,time,date,index);
+	}
+	//button1.style.backgroundColor="green";
+	li.appendChild(button1);
+	const button2=document.createElement('button');
+	button2.textContent="Delete";
+	button2.onclick=function(){
+		handleDelete(index);
+	}
+	//button2.style.backgroundColor="red";
+	li.appendChild(button2);
+	const button3=document.createElement('button');
+	button3.textContent="Up";
+	button3.onclick=function()
+	{
+		handleUp(index);
+	}
+	//button3.style.backgroundColor="#1ae0e0";
+	li.appendChild(button3);
+    const button4=document.createElement('button');
+	button4.textContent="Down";
+	button4.onclick=function(){
+		handleDown(index);
+	}
+	li.appendChild(button4);
+	// button4.style.backgroundColor="#1ae0e0";
+}	
+form.addEventListener('submit',function(e)
+{
+	e.preventDefault();
+    var obj={name:`${name.value}`,time:`${time.value}`,date:`${date.value}`};
+	itemsArray.push(obj);
+	console.log(itemsArray);
+
+	localStorage.setItem('items', JSON.stringify(itemsArray));//local storage only takes data in string form
+	liMaker(obj,itemsArray.length-1);
+	name.value="";
+	time.value="";
+	date.value="";
+	// location.reload();
+	if(setIntervalId !== ""){
+			clearInterval(setIntervalId)
+			data = JSON.parse(localStorage.getItem("items"))
+			setIntervalId = setInterval(checkDate,50000)
+		}
+});
+data.forEach((item,index) => {
+	liMaker(item,index);
+
+});
+button5.addEventListener('click',function(){
+	localStorage.clear();
+	while (ul.firstChild){
+		ul.removeChild(ul.firstChild);
+	}
+	itemsArray = [];
+
+});
+function handleUpdate(e)
+{
+	
+	
+	console.log("Edit Task...");
+    var n = name.value;
+    var t = time.value;
+    var d = date.value;
+
+    if(indexOfValueToBeChanged === -1){
+        alert(" Press `Enter` key to save `New Entry`.");
+        return;
+    }else{
+        itemsArray[indexOfValueToBeChanged] = {name:`${n}`,time:`${t}`,date:`${d}`};
+        console.log(itemsArray);
+        
+        localStorage.setItem('items',JSON.stringify(itemsArray));
+        ul.innerHTML = "";
+        itemsArray.forEach((item,index) => {
+  liMaker(item,index);
+
+});
+    }
+    indexOfValueToBeChanged = -1;
+    name.value = "";
+    time.value="";
+    date.value="";
+    // location.reload();
+	// updating in HTML result
+    // var listItem = this.parentNode;
+    // var newV=prompt("Enter updated value");
+    // console.log(newV);
+    
+    // var searchV=listItem.innerHTML;
+    // console.log(searchV);
+    //     listItem.innerHTML = `${newV}<button>Update</button><button>Delete</button><button>Up</button><button>Down</button>`;
+
+		
+	if(setIntervalId !== ""){
+			clearInterval(setIntervalId)
+			data = JSON.parse(localStorage.getItem("items"))
+			setIntervalId = setInterval(checkDate,50000)
+		}
+	alert("Updated");
+}
+    
+function setValueToInput(n,t,d,i){
+name.value = n;
+time.value = t;
+date.value = d;
+indexOfValueToBeChanged = i;
+}
+function handleDelete(i)
+{
+       
+         // remove from local storage
+         itemsArray.splice(i,1);
+        localStorage.setItem('items',JSON.stringify(itemsArray));
+        
+         // remove from html result
+
+         // var listItem = this.parentNode;
+         // ul.removeChild(listItem);
+         
+         let liToBeRemoved = document.querySelector(`li[data-index="${i}"]`);
+         // liToBeRemoved.parentNode.removeChild(liToBeRemoved);
+         ul.removeChild(liToBeRemoved);
+
+
+        // ul.innerHTML="";
+//         itemsArray.forEach((item,index) => {
+// 	liMaker(item,index);
+// });
+       
+		alert("Deleted");
+        
+		
+}
+function handleUp(i)
+{
+
+    var temp;
+    if(i-1!=-1)
+    {
+    temp=itemsArray[i];
+    itemsArray[i]=itemsArray[i-1];
+    itemsArray[i-1]=temp;
+   
+    localStorage.setItem('items',JSON.stringify(itemsArray));
+    ul.innerHTML = "";
+        itemsArray.forEach((item,index) => {
+  liMaker(item,index);
+  });
+    }
+    else{
+    	
+    	itemsArray[i]=itemsArray[i];
+    }
+    
+
+	// alert("MovedUp");
+}
+function handleDown(i)
+{
+
+    var temp;
+    if(i+1<itemsArray.length)
+    {
+    temp=itemsArray[i];
+    itemsArray[i]=itemsArray[i+1];
+    itemsArray[i+1]=temp;
+
+    localStorage.setItem('items',JSON.stringify(itemsArray));
+
+    ul.innerHTML = "";
+        itemsArray.forEach((item,index) => {
+  liMaker(item,index);
+
+});
+    }
+    else{
+    	itemsArray[i]=itemsArray[i];
+    }
+	
+
+	// alert("MovedDown");
+}
+
+setIntervalId = setInterval(checkDate,50000);
+function checkDate()
+{     
+	
+
+	var d = new Date();
+	var h=d.getHours();
+	h=zero(h);
+	var m=d.getMinutes();
+    m=zero(m);
+
+	var dat=d.getDate();
+	dat=zero(dat);
+	var month=d.getMonth()+1;
+	month=zero(month);
+	var year=d.getFullYear();
+    
+	var am_pm="AM";
+    console.log("You are in");
+    function zero(para)
+    {
+    	 if(para<10){para="0"+para;
+    	 return para;}
+    	 else{return para;}
+    }
+    
+    // console.log(h,m);
+    var timeC=h+":"+m;
+    var dateC=year+"-"+month+"-"+dat;
+    
+    
+
+    console.log(timeC);
+    console.log(dateC);
+	for(var i=0;i<data.length;i++)
+	{
+		var mTime=data[i].time;
+		var mDate=data[i].date; 
+		 console.log(mTime);
+		 console.log(mDate);
+        
+		if(mTime==timeC && mDate==dateC)
+		{
+			var n=data[i].name;
+			var t=data[i].time;
+            var dt=data[i].date;
+            console.log("not -1");
+
+            // document.querySelector('audio').play()
+            // if(audio.paused)
+           
+
+			alarm(n,t,dt,i);
+            
+		}
+
+	}
+}
+function alarm(name,time,date,i)
+{
+	var hoursAmPm=time.substring(0,2);
+	var minAmPm=time.substring(3,5);
+	
+
+	if(hoursAmPm>12)
+	{
+		hoursAmPm=hoursAmPm-12;
+		var timeAmPm=hoursAmPm+":"+minAmPm+"PM";
+	}
+	else
+	{
+		var timeAmPm=hoursAmPm+":"+minAmPm+"AM";
+	}
+	
+	if(audio.paused){
+		document.querySelector('audio').play();
+		 console.log('played');
+		alert(`Alert! The time of your meeting has arrived \n MEETINGS SCHEDULE \n Your Meeting Is With "${name}" \n Timming For Meeting:${timeAmPm} \n Date For Meeting: ${date} \n`);
+	handleDelete(i);
+
+	}
+}
+
+// var t=new Date();
+// console.log(t.getHours());
+// console.log(t.getMinutes());
+// console.log(t.getMonth());
+</script>
+</body>
+</html>
